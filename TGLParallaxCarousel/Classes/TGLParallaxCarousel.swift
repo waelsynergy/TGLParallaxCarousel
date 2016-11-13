@@ -51,10 +51,41 @@ public class TGLParallaxCarousel: UIView {
             reloadData()
         }
     }
+    public var colorSelected: UIImage = UIImage(named: "dotSelected")!  {
+        didSet {
+            reloadData()
+        }
+    }
+    public var colorUnSelected: UIImage = UIImage(named: "dotSelected")!  {
+        didSet {
+            reloadData()
+        }
+    }
     public var bounceMargin: CGFloat = 10 {
         didSet {
             reloadData()
         }
+    }
+    func hexStringToUIColor (hex:String) -> UIColor {
+        var cString:String = hex.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet() as NSCharacterSet).uppercaseString
+        
+        if (cString.hasPrefix("#")) {
+            cString = cString.substringFromIndex(cString.startIndex.advancedBy(1))
+        }
+        
+        if ((cString.characters.count) != 6) {
+            return UIColor.grayColor()
+        }
+        
+        var rgbValue:UInt32 = 0
+        NSScanner(string: cString).scanHexInt(&rgbValue)
+        
+        return UIColor(
+            red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
+            green: CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
+            blue: CGFloat(rgbValue & 0x0000FF) / 255.0,
+            alpha: CGFloat(1.0)
+        )
     }
     private var backingSelectedIndex = -1
     public var selectedIndex: Int {
@@ -154,10 +185,18 @@ public class TGLParallaxCarousel: UIView {
         layoutIfNeeded()
 
         pageControl.numberOfPages = delegate.numberOfItemsInCarouselView(self)
-        
         for index in 0..<delegate.numberOfItemsInCarouselView(self) {
             addItem(delegate.carouselView(self, itemForRowAtIndex: index))
         }
+        for var i = 0; i < pageControl.subviews.count; i++ {
+            var dot: UIView = pageControl.subviews[i] as! UIView
+            if dot.subviews.count == 0 {
+                addImageViewOnDotView(dot, imageSize: colorSelected.size)
+            }
+            var imageView: UIImageView = dot.subviews.first as! UIImageView
+            imageView.image = pageControl.currentPage == i ? colorSelected : colorUnSelected
+        }
+ 
     }
     
     func addItem(item: TGLParallaxCarouselItem) {
@@ -379,5 +418,27 @@ public class TGLParallaxCarousel: UIView {
     // MARK: - page control handler
     func updatePageControl(index: Int) {
         pageControl.currentPage = index
+        pageControl.pageIndicatorTintColor = UIColor.clearColor()
+        pageControl.currentPageIndicatorTintColor = UIColor.clearColor()
+        for var i = 0; i < pageControl.subviews.count; i++ {
+            var dot: UIView = pageControl.subviews[i] as! UIView
+            if dot.subviews.count == 0 {
+                addImageViewOnDotView(dot, imageSize: colorSelected.size)
+            }
+            var imageView: UIImageView = dot.subviews.first as! UIImageView
+            imageView.image = pageControl.currentPage == i ? colorSelected : colorUnSelected
+        }
+        
+
+
+    }
+    func addImageViewOnDotView(view: UIView, imageSize: CGSize) {
+        var frame = view.frame
+        frame.origin = CGPointZero
+        frame.size = imageSize
+        
+        var imageView = UIImageView(frame: frame)
+        imageView.contentMode = UIViewContentMode.Center
+        view.addSubview(imageView)
     }
 }
